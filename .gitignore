@@ -1,0 +1,21 @@
+# Environment variables / secrets - never commit real API keys
+.env
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Local SQLite database
+instance/
+
+# Virtual environment (if you create one)
+venv/
+env/
+.venv/
+
+# Editor/OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
