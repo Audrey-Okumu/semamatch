@@ -1,6 +1,7 @@
 from flask import Blueprint, Response, request
 from app.models.db import db
 from app.models.caller import Caller
+from app.services.matching import try_match
 
 voice_bp = Blueprint("voice", __name__)
 
@@ -70,10 +71,17 @@ def incoming_call():
         caller.status = "queued"
         db.session.commit()
 
-        response = xml(say(
-            "Thank you. You have been added to the matching queue. "
-            "Please hold while we find someone for you."
-        ))
+        match = try_match(caller)
+
+        if match:
+            response = xml(say(
+                "A match has been found. Connecting you now."
+            ))
+        else:
+            response = xml(say(
+                "Thank you. You have been added to the matching queue. "
+                "Please hold while we find someone for you."
+            ))
         return Response(response, mimetype="text/xml")
 
     response = xml(say("You are already in the queue."))
