@@ -13,13 +13,13 @@ def say(text):
 def get_digits(prompt, num_digits=1):
     # GetDigits block that asks a question and waits for keypad input.
 
-    return f'''<GetDigits timeout="10" numDigits="{num_digits}" callbackUrl="/voice/incoming">
+    callback = request.url_root.rstrip("/") + "/voice/incoming"
+    return f'''<GetDigits timeout="10" numDigits="{num_digits}" callbackUrl="{callback}">
         {say(prompt)}
     </GetDigits>'''
 
 
 def xml(*blocks):
-    
     body = "\n".join(blocks)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n{body}\n</Response>'
 
@@ -43,7 +43,6 @@ def incoming_call():
         ))
         return Response(response, mimetype="text/xml")
 
-
     if caller.language is None:
         caller.language = "english" if digits == "1" else "kiswahili"
         db.session.commit()
@@ -53,7 +52,6 @@ def incoming_call():
         ))
         return Response(response, mimetype="text/xml")
 
-    
     if caller.intent is None:
         intent_map = {"1": "serious", "2": "friendship", "3": "casual"}
         caller.intent = intent_map.get(digits, "casual")
@@ -64,7 +62,6 @@ def incoming_call():
         ))
         return Response(response, mimetype="text/xml")
 
-    
     if caller.age_bracket is None:
         age_map = {"1": "18-25", "2": "26-35", "3": "36+"}
         caller.age_bracket = age_map.get(digits, "26-35")
