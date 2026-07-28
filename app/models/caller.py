@@ -17,3 +17,16 @@ class Caller(db.Model):
     wants_reconnect = db.Column(db.Boolean, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "session_id": self.session_id,
+            "phone_number": self.phone_number,
+            "language": self.language,
+            "intent": self.intent,
+            "age_bracket": self.age_bracket,
+            "status": self.status,
+            "match_session_id": self.match_session_id,
+            "wants_reconnect": self.wants_reconnect,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
