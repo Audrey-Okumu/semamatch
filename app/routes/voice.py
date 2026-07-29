@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, current_app, request
 from app.models.db import db
 from app.models.caller import Caller
 from app.services.matching import try_match
@@ -68,17 +68,23 @@ def incoming_call():
         caller.status = "queued"
         db.session.commit()
 
+        from app.services.bridge import enqueue, dequeue, queue_name_for
+
         match = try_match(caller)
+        queue_name = queue_name_for(caller.intent, caller.language)
 
         if match:
-            response = xml(say(
-                "A match has been found. Connecting you now."
-            ))
+            # Someone was already waiting - pull them out of hold and bridge live
+            response = xml(
+                say("A match has been found. Connecting you now."),
+                dequeue(match.phone_number, queue_name)
+            )
         else:
-            response = xml(say(
-                "Thank you. You have been added to the matching queue. "
-                "Please hold while we find someone for you."
-            ))
+            # Nobody waiting yet - go on hold ourselves until someone matches us
+            response = xml(
+                say("Please hold while we find someone for you."),
+                enqueue(current_app.config["HOLD_MUSIC_URL"], queue_name)
+            )
         return Response(response, mimetype="text/xml")
 
     response = xml(say("You are already in the queue."))
