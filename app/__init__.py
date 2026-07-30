@@ -16,7 +16,6 @@ def create_app():
     app.config["AT_API_KEY"] = os.environ.get("AT_API_KEY", "")
     app.config["AT_VOICE_NUMBER"] = os.environ.get("AT_VOICE_NUMBER", "")
     app.config["AT_SENDER_ID"] = os.environ.get("AT_SENDER_ID", "")
-    app.config["HOLD_MUSIC_URL"] = os.environ.get("HOLD_MUSIC_URL", "")
 
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)
