@@ -14,8 +14,6 @@ def say(text):
 
 
 def callback_base():
-    # Prefer an explicit public URL (your ngrok https URL) so DTMF callbacks
-    # always return to the right host, even behind the ngrok proxy.
     return (os.environ.get("PUBLIC_BASE_URL") or request.url_root).rstrip("/")
 
 
@@ -35,8 +33,6 @@ def enqueue():
 
 
 def dequeue():
-    # phoneNumber MUST be your AT voice number (the number both callers dialled),
-    # in full international format, e.g. +254XXXXXXXXX.
     at_number = current_app.config.get("AT_VOICE_NUMBER", "")
     return f'<Dequeue phoneNumber="{at_number}" name="{QUEUE_NAME}"/>'
 
@@ -54,7 +50,6 @@ def incoming_call():
 
     caller = Caller.query.get(session_id)
 
-    # First contact for this call: create the row, ask for language.
     if caller is None:
         caller = Caller(session_id=session_id, phone_number=phone_number)
         db.session.add(caller)
@@ -98,22 +93,18 @@ def incoming_call():
         match = try_match(caller)
 
         if match:
-            # Someone was already waiting -> pull them out of the queue and bridge.
-            return Response(
-                xml(
-                    say("A match has been found. Connecting you now."),
-                    dequeue(),
-                ),
-                mimetype="text/xml",
+            response = xml(
+                say("A match has been found. Connecting you now."),
+                dequeue()
             )
-        # Nobody waiting yet -> hold this caller in the queue.
-        return Response(
-            xml(
-                say("Thank you. Please hold while we find someone for you."),
-                enqueue(),
-            ),
-            mimetype="text/xml",
-        )
+        else:
+            response = xml(
+                say(
+                    "Thank you. You have been added to the matching queue. "
+                    "Please hold while we find someone for you."
+                ),
+                enqueue()
+            )
+        return Response(response, mimetype="text/xml")
 
-    # Fallback: completed call re-entered the webhook.
     return Response(xml(say("You are already in the queue.")), mimetype="text/xml")
